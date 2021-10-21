@@ -1,23 +1,25 @@
 ﻿using System;
+using DefaultNamespace;
 using TMPro;
 using UnityEngine;
 
+[RequireComponent(typeof(BankUIController))]
 public class Bank : MonoBehaviour
 {
     [SerializeField] private int _points;
-    private TextMeshProUGUI _pointsText;
+    private BankUIController _bankUIController;
 
     private void Awake()
     {
-        _pointsText = GetComponentInChildren<TextMeshProUGUI>();
+        _bankUIController = GetComponentInChildren<BankUIController>();
     }
 
     private void Start()
     {
-        _pointsText.text = _points.ToString();
+        _bankUIController.ChangePoints(_points);
     }
 
-    public int GetPoints(int amount)
+    public int TakePoints(int amount)
     {
         int point;
         if (_points - amount < 0)
@@ -31,13 +33,13 @@ public class Bank : MonoBehaviour
             _points -= amount;
         }
 
-        _pointsText.text = _points.ToString();
+        _bankUIController.ChangePoints(_points);
         return point;
     }
 
     public void AddPoints(int amount)
     {
         _points += amount;
-        _pointsText.text = _points.ToString();
+        _bankUIController.ChangePoints(_points);
     }
 }

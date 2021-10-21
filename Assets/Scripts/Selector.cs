@@ -24,38 +24,43 @@ public class Selector : MonoBehaviour
     private void Start()
     {
         _otherHouses = _spawner.OtherHouses;
-        Persons.ObserveAdd()
+        Persons
+            .ObserveAdd()
             .Where(x => Persons.Count == 2)
             .Subscribe(_ => Select());
     }
 
+
+    private float GetPersonProbability(Person person1, Person person2)
+    {
+        return (person1.PointsBringAmount + _probabilityFault) /
+               (person1.PointsBringAmount + person2.PointsBringAmount + 2 * _probabilityFault);
+    }
     private void Select()
     {
-        Person person1 = Persons[0];
-        Person person2 = Persons[1];
-        float probability1 = (float)(person1.PointsBringAmount + _probabilityFault) /
-                             (person1.PointsBringAmount + person2.PointsBringAmount + 2 * _probabilityFault);
-        float probability2 = (float)(person2.PointsBringAmount + _probabilityFault) /
-                           (person1.PointsBringAmount + person2.PointsBringAmount + 2 * _probabilityFault);
+        var person1 = Persons[0];
+        var person2 = Persons[1];
+        float probability1 = GetPersonProbability(person1, person2);
+        float probability2 = GetPersonProbability(person2, person1);
         
         Person bestPerson;
         Person worstPerson;
-        float minProb;
+        float minProbability;
         if (probability1 > probability2)
         {
             bestPerson = person1;
             worstPerson = person2;
-            minProb = probability2;
+            minProbability = probability2;
         }
         else
         {
             bestPerson = person2;
             worstPerson = person1;
-            minProb = probability1;
+            minProbability = probability1;
         }
         
-        RollGenotype(person1, minProb, worstPerson, bestPerson);
-        RollGenotype(person2, minProb, worstPerson, bestPerson);
+        RollGenotype(person1, minProbability, worstPerson, bestPerson);
+        RollGenotype(person2, minProbability, worstPerson, bestPerson);
         
         _spawner.SpawnPerson(person1);
         _spawner.SpawnPerson(person2);
@@ -67,6 +72,11 @@ public class Selector : MonoBehaviour
         person.PointsGrabSize = TestRoll(minProb) ? worstPerson.PointsGrabSize : bestPerson.PointsGrabSize;
         person.StillProbability = TestRoll(minProb) ? worstPerson.StillProbability : bestPerson.StillProbability;
         person.HouseStill = TestRoll(minProb) ? worstPerson.HouseStill : bestPerson.HouseStill;
+        TryMutate(person);
+    }
+
+    private void TryMutate(Person person)
+    {
         if (TestRoll(_mutationProbability))
         {
             int mutationRoll = Random.Range(1, 4);
